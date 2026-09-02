@@ -933,10 +933,33 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
         it.date_upload = uploadDate
         it.scanlator = scanlator
         it.chapter_number = chapterNumber.toString().toFloat()
-        it.memo = buildJsonObject {
-            meta.find { entry -> entry.key == "curated_pick" }?.let { entry ->
-                put("turbomihon.curated_pick", JsonPrimitive(entry.value))
+
+        val curatedPick = meta.find { entry -> entry.key == "curated_pick" }
+        if (curatedPick != null) {
+            val memo = buildJsonObject {
+                put("turbomihon.curated_pick", JsonPrimitive(curatedPick.value))
             }
+            it.setMemoIfSupported(memo)
+        }
+    }
+
+    /**
+     * SChapter.memo (a JsonObject property) doesn't exist on the compile-time SChapter stub
+     * this module builds against (com.github.tachiyomiorg:extensions-lib 1.4.4, an archived
+     * 2023 Tachiyomi 0.x compatibility stub). It's a `compileOnly` dependency though: at
+     * runtime the host app supplies its own SChapter/SChapterImpl, and on forks that add a
+     * `memo` property (e.g. TurboMihon) that property genuinely exists on the runtime object.
+     * Set it reflectively so this stays a no-op on hosts without it instead of failing to
+     * compile against the stub.
+     */
+    private fun SChapter.setMemoIfSupported(memo: kotlinx.serialization.json.JsonObject) {
+        try {
+            val setter = this.javaClass.methods.firstOrNull { m ->
+                m.name == "setMemo" && m.parameterTypes.size == 1
+            } ?: return
+            setter.invoke(this, memo)
+        } catch (_: Exception) {
+            // Host SChapter has no memo property (or an incompatible one) - nothing to do.
         }
     }
 
