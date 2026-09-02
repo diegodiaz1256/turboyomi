@@ -42,8 +42,13 @@ jobs:
         env:
           ALIAS: ${{ secrets.ALIAS }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          keytool -list -keystore signingkey.jks -alias "$ALIAS" -storepass "$KEY_STORE_PASSWORD"
+          # -list alone doesn't decrypt the private key entry (no -keypass
+          # needed), so it can pass even when the key password is wrong.
+          # -exportcert forces an actual key-entry read.
+          keytool -list -v -keystore signingkey.jks -alias "$ALIAS" -storepass "$KEY_STORE_PASSWORD" -keypass "$KEY_PASSWORD" \
+            || { echo "::error::keystore/password mismatch - see above"; exit 1; }
 
       - name: Build extensions (chunk ${{ matrix.chunk }})
         env:
