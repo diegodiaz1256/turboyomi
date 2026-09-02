@@ -45,7 +45,7 @@ jobs:
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
-        if: "github.repository == 'suwayomi/tachiyomi-extension'"
+        if: "github.repository == 'suwayomi/tachiyomi-extension' || github.repository == 'diegodiaz1256/turboyomi'"
         with:
           name: "individual-apks"
           path: "**/*.apk"
@@ -58,7 +58,7 @@ jobs:
     name: Publish repo
     needs:
       - build_individual
-    if: "github.repository == 'suwayomi/tachiyomi-extension'"
+    if: "github.repository == 'suwayomi/tachiyomi-extension' || github.repository == 'diegodiaz1256/turboyomi'"
     runs-on: ubuntu-latest
     steps:
       - name: Download APK artifacts
