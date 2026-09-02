@@ -54,6 +54,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromStream
 import okhttp3.Dns
 import okhttp3.Headers
@@ -931,6 +933,11 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
         it.date_upload = uploadDate
         it.scanlator = scanlator
         it.chapter_number = chapterNumber.toString().toFloat()
+        it.memo = buildJsonObject {
+            meta.find { entry -> entry.key == "curated_pick" }?.let { entry ->
+                put("turbomihon.curated_pick", JsonPrimitive(entry.value))
+            }
+        }
     }
 
     private val cleanUrl: String

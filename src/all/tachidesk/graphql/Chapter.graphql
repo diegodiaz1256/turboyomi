@@ -7,6 +7,10 @@ fragment ChapterFragment on ChapterType {
     scanlator
     sourceOrder
     mangaId
+    meta {
+        key
+        value
+    }
 }
 
 mutation GetChapters($mangaId: Int!) {
