@@ -36,6 +36,7 @@ android {
     signingConfigs {
         release {
             storeFile rootProject.file("signingkey.jks")
+            storeType "PKCS12"
             storePassword System.getenv("KEY_STORE_PASSWORD")
             keyAlias System.getenv("ALIAS")
             keyPassword System.getenv("KEY_PASSWORD")
