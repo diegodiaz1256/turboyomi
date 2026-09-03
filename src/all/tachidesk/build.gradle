@@ -5,9 +5,9 @@ apply plugin: 'com.apollographql.apollo3'
 
 ext {
     extName = 'Turboyomi'
-    pkgNameSuffix = 'all.tachidesk'
+    pkgNameSuffix = 'all.turboyomi'
     extClass = '.Tachidesk'
-    extVersionCode = 30
+    extVersionCode = 31
 }
 
 apply from: "$rootDir/common.gradle"
