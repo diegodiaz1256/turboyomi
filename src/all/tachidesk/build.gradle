@@ -6,8 +6,13 @@ apply plugin: 'com.apollographql.apollo3'
 ext {
     extName = 'Turboyomi'
     pkgNameSuffix = 'all.turboyomi'
-    extClass = '.Tachidesk'
-    extVersionCode = 31
+    // Fully-qualified, not relative (".Tachidesk"): the Kotlin source
+    // package is still eu.kanade.tachiyomi.extension.all.tachidesk (the
+    // source file didn't move), but pkgNameSuffix now makes the installed
+    // applicationId ...all.turboyomi. A relative extClass would resolve
+    // against applicationId and point at a class that doesn't exist there.
+    extClass = 'eu.kanade.tachiyomi.extension.all.tachidesk.Tachidesk'
+    extVersionCode = 32
 }
 
 apply from: "$rootDir/common.gradle"
