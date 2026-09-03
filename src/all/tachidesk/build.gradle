@@ -4,10 +4,10 @@ apply plugin: 'kotlinx-serialization'
 apply plugin: 'com.apollographql.apollo3'
 
 ext {
-    extName = 'Suwayomi'
+    extName = 'Turboyomi'
     pkgNameSuffix = 'all.tachidesk'
     extClass = '.Tachidesk'
-    extVersionCode = 29
+    extVersionCode = 30
 }
 
 apply from: "$rootDir/common.gradle"
