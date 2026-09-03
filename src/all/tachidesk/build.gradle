@@ -13,7 +13,7 @@ ext {
     // fix for the applicationIdSuffix change is moving the Kotlin source
     // package to match (see all/turboyomi/ instead of all/tachidesk/).
     extClass = '.Tachidesk'
-    extVersionCode = 34
+    extVersionCode = 35
 }
 
 apply from: "$rootDir/common.gradle"
