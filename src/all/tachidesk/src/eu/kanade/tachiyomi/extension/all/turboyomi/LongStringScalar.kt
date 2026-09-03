@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package eu.kanade.tachiyomi.extension.all.tachidesk
+package eu.kanade.tachiyomi.extension.all.turboyomi
 
 import com.apollographql.apollo3.api.Adapter
 import com.apollographql.apollo3.api.CustomScalarAdapters

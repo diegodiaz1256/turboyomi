@@ -1,11 +1,11 @@
-package eu.kanade.tachiyomi.extension.all.tachidesk
+package eu.kanade.tachiyomi.extension.all.turboyomi
 
 import android.util.Log
 import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.api.http.HttpHeader
 import com.apollographql.apollo3.network.okHttpClient
-import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.LoginMutation
-import eu.kanade.tachiyomi.extension.all.tachidesk.apollo.RefreshTokenMutation
+import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.LoginMutation
+import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.RefreshTokenMutation
 import eu.kanade.tachiyomi.network.await
 import kotlinx.coroutines.flow.single
 import okhttp3.Credentials

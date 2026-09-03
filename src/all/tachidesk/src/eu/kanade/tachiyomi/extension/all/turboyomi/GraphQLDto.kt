@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.extension.all.tachidesk
+package eu.kanade.tachiyomi.extension.all.turboyomi
 
 import kotlinx.serialization.Serializable
 

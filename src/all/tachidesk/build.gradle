@@ -6,22 +6,23 @@ apply plugin: 'com.apollographql.apollo3'
 ext {
     extName = 'Turboyomi'
     pkgNameSuffix = 'all.turboyomi'
-    // Fully-qualified, not relative (".Tachidesk"): the Kotlin source
-    // package is still eu.kanade.tachiyomi.extension.all.tachidesk (the
-    // source file didn't move), but pkgNameSuffix now makes the installed
-    // applicationId ...all.turboyomi. A relative extClass would resolve
-    // against applicationId and point at a class that doesn't exist there.
-    extClass = 'eu.kanade.tachiyomi.extension.all.tachidesk.Tachidesk'
-    extVersionCode = 32
+    // Relative: Suwayomi's own extension-loading code (used by this repo's
+    // CI to validate/index built APKs) concatenates packageName + extClass
+    // itself, so this must stay dot-prefixed - a fully-qualified value
+    // gets concatenated too, producing a garbled class name. The actual
+    // fix for the applicationIdSuffix change is moving the Kotlin source
+    // package to match (see all/turboyomi/ instead of all/tachidesk/).
+    extClass = '.Tachidesk'
+    extVersionCode = 33
 }
 
 apply from: "$rootDir/common.gradle"
 
 apollo {
     service("service") {
-        packageName.set("eu.kanade.tachiyomi.extension.all.tachidesk.apollo")
+        packageName.set("eu.kanade.tachiyomi.extension.all.turboyomi.apollo")
         srcDir("graphql")
-        mapScalar("LongString","kotlin.Long", "eu.kanade.tachiyomi.extension.all.tachidesk.LongStringScalar")
+        mapScalar("LongString","kotlin.Long", "eu.kanade.tachiyomi.extension.all.turboyomi.LongStringScalar")
 
         introspection {
             endpointUrl.set("http://localhost:4567/api/graphql")
