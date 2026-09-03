@@ -2,14 +2,14 @@
   {
     "name": "Tachiyomi: Turboyomi",
     "pkg": "eu.kanade.tachiyomi.extension.all.turboyomi",
-    "apk": "tachiyomi-all.turboyomi-v1.4.36.apk",
+    "apk": "tachiyomi-all.turboyomi-v1.4.37.apk",
     "lang": "all",
-    "code": 36,
-    "version": "1.4.36",
+    "code": 37,
+    "version": "1.4.37",
     "nsfw": 0,
     "sources": [
       {
-        "name": "Suwayomi",
+        "name": "Turboyomi",
         "lang": "all",
         "id": "3100117499901280806",
         "baseUrl": "",
