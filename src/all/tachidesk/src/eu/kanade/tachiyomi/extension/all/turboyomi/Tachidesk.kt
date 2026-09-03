@@ -72,7 +72,7 @@ import kotlin.collections.any
 import kotlin.math.min
 
 class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
-    override val name = "Suwayomi"
+    override val name = "Turboyomi"
     override val id = 3100117499901280806L
 
     private val json: Json by lazy { Json { ignoreUnknownKeys = true } }
