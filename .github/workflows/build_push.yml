@@ -98,7 +98,13 @@ jobs:
           ./.github/scripts/move-apks.sh
           INSPECTOR_LINK="$(curl -s "https://api.github.com/repos/tachiyomiorg/tachiyomi-extensions-inspector/releases/latest" | jq -r '.assets[0].browser_download_url')"
           curl -L "$INSPECTOR_LINK" -o ./Inspector.jar
-          java -jar ./Inspector.jar "apk" "output.json" "tmp"
+          # The inspector is built for 1.4 extensions and may not load 1.6 ones. Fall back to the
+          # checked-in source list for any package it could not inspect.
+          java -jar ./Inspector.jar "apk" "output.json" "tmp" || echo "::warning::Inspector failed, using fallback source info"
+          [ -s output.json ] || echo '{}' > output.json
+          jq -s '.[1] + (.[0] | with_entries(select(.value != null and (.value | length) > 0)))' \
+            output.json .github/sources-fallback.json > output.merged.json
+          mv output.merged.json output.json
           ./.github/scripts/create-repo.sh
 
       - name: Checkout repo branch

@@ -36,6 +36,7 @@ import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.source.model.SMangaUpdate
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -62,7 +63,6 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import rx.Observable
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.TimeUnit
@@ -181,8 +181,8 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
     override fun popularMangaParse(response: Response): MangasPage =
         throw Exception("Not used")
 
-    override fun fetchPopularManga(page: Int): Observable<MangasPage> {
-        return fetchSearchManga(page, "", FilterList())
+    override suspend fun getPopularManga(page: Int): MangasPage {
+        return getSearchManga(page, "", FilterList())
     }
 
     // ------------- Latest Manga -------------
@@ -193,8 +193,8 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
     override fun latestUpdatesParse(response: Response): MangasPage =
         throw Exception("Not used")
 
-    override fun fetchLatestUpdates(page: Int): Observable<MangasPage> {
-        return fetchSearchManga(
+    override suspend fun getLatestUpdates(page: Int): MangasPage {
+        return getSearchManga(
             page,
             "",
             FilterList(SortBy(sortByOptions).apply { state = Selection(3, false) }),
@@ -225,15 +225,15 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
                 .toSManga()
         }
 
-    override fun fetchMangaDetails(manga: SManga): Observable<SManga> {
-        return runCatching {
+    private suspend fun getMangaDetails(manga: SManga): SManga {
+        return run {
             if (fetchDataFromSource()) {
                 apolloClient.value
                     .mutation(
                         GetMangaAndChaptersMutation(
                             manga.url.toInt(),
                             fetchManga = true,
-                            fetchChapters = false
+                            fetchChapters = false,
                         ),
                     )
                     .toFlow()
@@ -266,10 +266,20 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
                     }
             } else {
                 getMangaDetailsFlow(manga.url.toInt())
-            }.asObservable()
-        }.getOrElse {
-            Observable.error(it)
+            }.first()
         }
+    }
+
+    override suspend fun getMangaUpdate(
+        manga: SManga,
+        chapters: List<SChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): SMangaUpdate {
+        return SMangaUpdate(
+            manga = if (fetchDetails) getMangaDetails(manga) else manga,
+            chapters = if (fetchChapters) getChapterList(manga) else chapters,
+        )
     }
 
     // ------------- Chapter -------------
@@ -301,15 +311,15 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
                 }
         }
 
-    override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> {
-        return runCatching {
+    private suspend fun getChapterList(manga: SManga): List<SChapter> {
+        return run {
             if (fetchDataFromSource()) {
                 apolloClient.value
                     .mutation(
                         GetMangaAndChaptersMutation(
                             manga.url.toInt(),
                             fetchManga = false,
-                            fetchChapters = true
+                            fetchChapters = true,
                         ),
                     )
                     .toFlow()
@@ -345,17 +355,15 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
                     }
             } else {
                 getChapterListFlow(manga.url.toInt())
-            }.asObservable()
-        }.getOrElse {
-            Observable.error(it)
+            }.first()
         }
     }
 
     // ------------- Page List -------------
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun fetchPageList(chapter: SChapter): Observable<List<Page>> {
-        return runCatching {
+    override suspend fun getPageList(chapter: SChapter): List<Page> {
+        return run {
             val mangaId = chapter.url.substringBefore(' ', "").toInt()
             val chapterSourceOrder = chapter.url.substringAfter(' ', "").toInt()
             apolloClient.value
@@ -389,9 +397,7 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
                                 }
                         }
                 }
-                .asObservable()
-        }.getOrElse {
-            Observable.error(it)
+                .first()
         }
     }
 
@@ -527,12 +533,12 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
     override fun searchMangaParse(response: Response) =
         throw Exception("Not used")
 
-    override fun fetchSearchManga(
+    override suspend fun getSearchManga(
         page: Int,
         query: String,
         filters: FilterList,
-    ): Observable<MangasPage> {
-        return runCatching {
+    ): MangasPage {
+        return run {
             // Embed search query and scope into URL params for processing in searchMangaParse
             var currentCategoryId = defaultCategoryId
             var resultsPerPage = defaultResultsPerPage
@@ -736,9 +742,7 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
 
                     MangasPage(searchResults.map { mangaData -> mangaData.toSManga() }, hasNextPage)
                 }
-                .asObservable()
-        }.getOrElse {
-            Observable.error(it)
+                .first()
         }
     }
 
@@ -946,27 +950,7 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
             val memo = buildJsonObject {
                 put("turbomihon.curated_pick", JsonPrimitive(curatedPick.value))
             }
-            it.setMemoIfSupported(memo)
-        }
-    }
-
-    /**
-     * SChapter.memo (a JsonObject property) doesn't exist on the compile-time SChapter stub
-     * this module builds against (com.github.tachiyomiorg:extensions-lib 1.4.4, an archived
-     * 2023 Tachiyomi 0.x compatibility stub). It's a `compileOnly` dependency though: at
-     * runtime the host app supplies its own SChapter/SChapterImpl, and on forks that add a
-     * `memo` property (e.g. TurboMihon) that property genuinely exists on the runtime object.
-     * Set it reflectively so this stays a no-op on hosts without it instead of failing to
-     * compile against the stub.
-     */
-    private fun SChapter.setMemoIfSupported(memo: kotlinx.serialization.json.JsonObject) {
-        try {
-            val setter = this.javaClass.methods.firstOrNull { m ->
-                m.name == "setMemo" && m.parameterTypes.size == 1
-            } ?: return
-            setter.invoke(this, memo)
-        } catch (_: Exception) {
-            // Host SChapter has no memo property (or an incompatible one) - nothing to do.
+            it.memo = memo
         }
     }
 
