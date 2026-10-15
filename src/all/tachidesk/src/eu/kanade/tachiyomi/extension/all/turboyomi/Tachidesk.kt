@@ -15,9 +15,8 @@ import com.apollographql.apollo3.network.okHttpClient
 import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetCategoriesQuery
 import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetChapterIdQuery
 import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetChaptersDataQuery
-import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetChaptersMutation
+import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetMangaAndChaptersMutation
 import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetMangaDataQuery
-import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetMangaMutation
 import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.GetPagesMutation
 import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.SearchMangaQuery
 import eu.kanade.tachiyomi.extension.all.turboyomi.apollo.fragment.CategoryFragment
@@ -95,7 +94,7 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
                     response
                 }
             } catch (_: UnauthorizedException) {
-                Log.i(TAG, "Was Unauthorizied, re-running with new token")
+                Log.i(TAG, "Was Unauthorized, re-running with new token")
                 chain.proceed(with(tokenManager.value) { chain.request().newBuilder().addToken() }.build())
             }
         }
@@ -231,12 +230,16 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
             if (fetchDataFromSource()) {
                 apolloClient.value
                     .mutation(
-                        GetMangaMutation(manga.url.toInt()),
+                        GetMangaAndChaptersMutation(
+                            manga.url.toInt(),
+                            fetchManga = true,
+                            fetchChapters = false
+                        ),
                     )
                     .toFlow()
                     .map {
                         it.dataAssertNoErrors
-                            .fetchManga!!
+                            .fetchMangaAndChapters!!
                             .manga
                             .mangaFragment
                             .toSManga()
@@ -303,13 +306,17 @@ class Tachidesk : ConfigurableSource, UnmeteredSource, HttpSource() {
             if (fetchDataFromSource()) {
                 apolloClient.value
                     .mutation(
-                        GetChaptersMutation(manga.url.toInt()),
+                        GetMangaAndChaptersMutation(
+                            manga.url.toInt(),
+                            fetchManga = false,
+                            fetchChapters = true
+                        ),
                     )
                     .toFlow()
                     .map { response ->
 
                         response.dataAssertNoErrors
-                            .fetchChapters!!
+                            .fetchMangaAndChapters!!
                             .chapters
                             .sortedByDescending { it.chapterFragment.sourceOrder }
                             .map {
