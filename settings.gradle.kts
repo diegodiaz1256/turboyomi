@@ -1,11 +1,7 @@
 include(":core")
 
-// Load all modules under /lib
-File(rootDir, "lib").eachDir {
-    val libName = it.name
-    include(":lib-$libName")
-    project(":lib-$libName").projectDir = File("lib/$libName")
-}
+// The shared modules under /lib are not used by Turboyomi and still target the old
+// Kotlin and extensions-lib toolchain, so they are no longer part of the build.
 
 if (System.getenv("CI") == null) {
     // Local development (full project build)

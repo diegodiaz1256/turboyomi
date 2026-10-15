@@ -8,7 +8,6 @@ buildscript {
         classpath(libs.gradle.agp)
         classpath(libs.gradle.kotlin)
         classpath(libs.gradle.serialization)
-        classpath(libs.gradle.kotlinter)
         classpath(libs.gradle.apollo)
     }
 }
